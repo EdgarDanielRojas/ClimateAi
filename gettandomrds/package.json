@@ -1,0 +1,15 @@
+{
+  "name": "gettanomrds",
+  "version": "1.0.0",
+  "description": "Code for AWS lambda",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "Edgar Rojas",
+  "license": "ISC",
+  "dependencies": {
+    "mysql": "^2.17.1"
+  }
+}

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8' />
+<title>Climate.ai | Temperature Anomalies</title>
+<link rel="icon" href="https://static.wixstatic.com/media/0f267b_fd294affe97b4969a46781f94dfd0d44%7Emv2.png/v1/fill/w_32%2Ch_32%2Clg_1%2Cusm_0.66_1.00_0.01/0f267b_fd294affe97b4969a46781f94dfd0d44%7Emv2.png">
+<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.5.0/mapbox-gl.js'></script>
+<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.5.0/mapbox-gl.css' rel='stylesheet' />
+<style>
+body { margin:0; padding:0; }
+#map { height: 500px;}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="row" style="padding-top:20px;">
+    <div id='map' class="col-md-9"></div>
+    <div class="col-md-3">
+      <div id='monthSelection'>
+          <h5>Month to Consult</h5>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="monthRadios" id="januaryButton" value="1" checked>
+            <label class="form-check-label" for="januaryButton">
+              January
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="monthRadios" id="februaryButton" value="2">
+            <label class="form-check-label" for="februaryButton">
+              February
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="monthRadios" id="marchButton" value="3" >
+            <label class="form-check-label" for="marchButton">
+              March
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="monthRadios" id="aprilButton" value="4">
+            <label class="form-check-label" for="aprilButton">
+              April
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="monthRadios" id="mayButton" value="5">
+            <label class="form-check-label" for="mayButton">
+              May
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="monthRadios" id="juneButton" value="6" >
+            <label class="form-check-label" for="juneButton">
+              June
+            </label>
+          </div>
+      </div>
+      <div id="posicion">
+        <p id="LongPos">Long: 0.0</p>
+        <p id="LatPos">Lat: 0.0</p>
+        <p id="TanomVal"></p>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Jan.</th>
+          <th scope="col">Feb.</th>
+          <th scope="col">Mar.</th>
+          <th scope="col">Apr.</th>
+          <th scope="col">May</th>
+          <th scope="col">Jun.</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td id='tanomMonth1'></th>
+          <td id='tanomMonth2'></td>
+          <td id='tanomMonth3'></td>
+          <td id='tanomMonth4'></td>
+          <td id='tanomMonth5'></td>
+          <td id='tanomMonth6'></td>
+        </tr>
+      </tbody>
+    </table>
+  </row>
+</div>
+
+
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZWRnYXJkYW5pZWxwcm9nIiwiYSI6ImNrMmZmcjl3cDBqdmQzaG9keGZtdm5iaWoifQ.bbjOGE0ynWQb68hBNdalSw';
+    var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/light-v9',
+    center: [-120, 50],
+    zoom: 2
+    });
+
+
+    map.addControl(new mapboxgl.NavigationControl());
+</script>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<script>
+  function cleanTable(){
+    let tdId = '';
+    for( i = 1;i<=6;i++){
+      tdId = 'tanomMonth'+i.toString();
+      document.getElementById(tdId).innerHTML = '';
+    }
+  }
+
+  function populateTable(res){
+    for (index = 0; index < res.length; index++) {
+      console.log(array[index]);
+      tdId = 'tanomMonth'+res[0].month.toString();
+      document.getElementById(tdId).innerHTML = res[0].tanom;
+    }
+  }
+
+  function deleteLayers(){
+    map.removeLayer('tanom-heat');
+    map.removeLayer('heatmap-point');
+    map.removeSource('tanom');
+  }
+
+  function addLayers(month){
+    console.log(month);
+    let monthstring = "./src/month"+month+"tanom.geojson";
+    console.log(monthstring);
+    map.addSource('tanom', {
+    "type": "geojson",
+    "data": monthstring
+    });
+
+    map.addLayer({
+    "id": "tanom-heat",
+    "type": "heatmap",
+    "source": "tanom",
+    "maxzoom": 9,
+    "paint": {
+    // Increase the heatmap weight based on frequency and property magnitude
+    "heatmap-weight": [
+    "interpolate",
+    ["linear"],
+    ["get", "tanom"],
+    0, 0,
+    10, 1
+    ],
+    // Increase the heatmap color weight weight by zoom level
+    // heatmap-intensity is a multiplier on top of heatmap-weight
+    "heatmap-intensity": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    0, 1,
+    9, 3
+    ],
+    // Color ramp for heatmap.  Domain is 0 (low) to 1 (high).
+    // Begin color ramp at 0-stop with a 0-transparancy color
+    // to create a blur-like effect.
+    "heatmap-color": [
+    "interpolate",
+    ["linear"],
+    ["heatmap-density"],
+    0, "rgba(33,102,172,0)",
+    0.2, "rgb(103,169,207)",
+    0.4, "rgb(209,229,240)",
+    0.6, "rgb(253,219,199)",
+    0.8, "rgb(239,138,98)",
+    1, "rgb(178,24,43)"
+    ],
+    // Adjust the heatmap radius by zoom level
+    "heatmap-radius": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    0, 2,
+    9, 20
+    ],
+    // Transition from heatmap to circle layer by zoom level
+    "heatmap-opacity": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    7, 1,
+    9, 0
+    ],
+    }
+    }, 'waterway-label');
+
+    map.addLayer({
+    "id": "heatmap-point",
+    "type": "circle",
+    "source": "tanom",
+    "minzoom": 7,
+    "paint": {
+    // Size circle radius by earthquake magnitude and zoom level
+    "circle-radius": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    7, [
+    "interpolate",
+    ["linear"],
+    ["get", "tanom"],
+    1, 1,
+    6, 4
+    ],
+    16, [
+    "interpolate",
+    ["linear"],
+    ["get", "tanom"],
+    1, 5,
+    6, 50
+    ]
+    ],
+    // Color circle by earthquake magnitude
+    "circle-color": [
+    "interpolate",
+    ["linear"],
+    ["get", "mag"],
+    1, "rgba(33,102,172,0)",
+    2, "rgb(103,169,207)",
+    3, "rgb(209,229,240)",
+    4, "rgb(253,219,199)",
+    5, "rgb(239,138,98)",
+    6, "rgb(178,24,43)"
+    ],
+    "circle-stroke-color": "white",
+    "circle-stroke-width": 1,
+    // Transition from heatmap to circle layer by zoom level
+    "circle-opacity": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    7, 0,
+    8, 1
+    ]
+    }
+    }, 'waterway-label');
+  }
+
+  function getMonthTanoms(latv,lonv){
+    cleanTable();
+    let infoSend = {
+      lat: latv,
+      lon: lonv
+    };
+    $.ajax({
+            url: ' https://z9e2x8udw2.execute-api.us-east-1.amazonaws.com/preTest/gettanoms',
+            type: 'post',
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function (data) {
+                populateTable(data.body);
+            },
+            data: JSON.stringify(infoSend)
+        });
+  }
+
+  map.on('load',function (){
+    let monthstring = "./src/month1tanom.geojson";
+    map.addSource('tanom', {
+    "type": "geojson",
+    "data": monthstring
+    });
+
+    map.addLayer({
+    "id": "tanom-heat",
+    "type": "heatmap",
+    "source": "tanom",
+    "maxzoom": 9,
+    "paint": {
+    // Increase the heatmap weight based on frequency and property magnitude
+    "heatmap-weight": [
+    "interpolate",
+    ["linear"],
+    ["get", "tanom"],
+    0, 0,
+    6, 1
+    ],
+    // Increase the heatmap color weight weight by zoom level
+    // heatmap-intensity is a multiplier on top of heatmap-weight
+    "heatmap-intensity": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    0, 1,
+    9, 3
+    ],
+    // Color ramp for heatmap.  Domain is 0 (low) to 1 (high).
+    // Begin color ramp at 0-stop with a 0-transparancy color
+    // to create a blur-like effect.
+    "heatmap-color": [
+    "interpolate",
+    ["linear"],
+    ["heatmap-density"],
+    0, "rgba(33,102,172,0)",
+    0.2, "rgb(103,169,207)",
+    0.4, "rgb(209,229,240)",
+    0.6, "rgb(253,219,199)",
+    0.8, "rgb(239,138,98)",
+    1, "rgb(178,24,43)"
+    ],
+    // Adjust the heatmap radius by zoom level
+    "heatmap-radius": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    0, 2,
+    9, 20
+    ],
+    // Transition from heatmap to circle layer by zoom level
+    "heatmap-opacity": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    7, 1,
+    9, 0
+    ],
+    }
+    }, 'waterway-label');
+
+    map.addLayer({
+    "id": "heatmap-point",
+    "type": "circle",
+    "source": "tanom",
+    "minzoom": 7,
+    "paint": {
+    // Size circle radius by earthquake magnitude and zoom level
+    "circle-radius": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    7, [
+    "interpolate",
+    ["linear"],
+    ["get", "tanom"],
+    1, 1,
+    6, 4
+    ],
+    16, [
+    "interpolate",
+    ["linear"],
+    ["get", "tanom"],
+    1, 5,
+    6, 50
+    ]
+    ],
+    // Color circle by earthquake magnitude
+    "circle-color": [
+    "interpolate",
+    ["linear"],
+    ["get", "mag"],
+    1, "rgba(33,102,172,0)",
+    2, "rgb(103,169,207)",
+    3, "rgb(209,229,240)",
+    4, "rgb(253,219,199)",
+    5, "rgb(239,138,98)",
+    6, "rgb(178,24,43)"
+    ],
+    "circle-stroke-color": "white",
+    "circle-stroke-width": 1,
+    // Transition from heatmap to circle layer by zoom level
+    "circle-opacity": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    7, 0,
+    8, 1
+    ]
+    }
+    }, 'waterway-label');
+  });
+
+  $(document).ready(function () {
+        $('input[type=radio][name=monthRadios]').change(function() {
+            deleteLayers();
+            addLayers(this.value)
+        });
+      });
+
+  map.on('mousemove', function (e) {
+    //console.log(e.lngLat);
+    document.getElementById('LongPos').innerHTML = 'Longitude: '+e.lngLat.lng;
+    document.getElementById('LatPos').innerHTML = 'Latitude: '+e.lngLat.lat;
+
+  });
+
+  map.on('click', 'heatmap-point', function (e) {
+    var coordinates = e.features[0].geometry.coordinates.slice();
+    var tanom = e.features[0].properties.tanom;
+    document.getElementById('TanomVal').innerHTML = 'Tanom: '+tanom;
+    console.log(coordinates);
+    getMonthTanoms(coordinates[0],coordinates[1]);
+
+    //alert(tanom + coordinates);
+
+    });
+</script>
+</body>
+</html>
